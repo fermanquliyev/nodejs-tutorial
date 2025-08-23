@@ -18,5 +18,6 @@
   "bugs": {
     "url": "https://github.com/fermanquliyev/nodejs-tutorial/issues"
   },
-  "homepage": "https://github.com/fermanquliyev/nodejs-tutorial#readme"
+  "homepage": "https://github.com/fermanquliyev/nodejs-tutorial#readme",
+  "type": "module"
 }
