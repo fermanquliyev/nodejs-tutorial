@@ -1,23 +1,46 @@
 import http from 'http';
-import { getAllPosts, getPostById, createPost, updatePost, deletePost } from './postController.js';
+import { getAllPosts, getPostById, createPost, updatePost, deletePost, getPostsAsTable } from './postController.js';
 import url from 'url';
+import path from 'path';
+import fs from 'fs/promises';
 
-const server = http.createServer((req, res) =>
+
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+console.log(__filename);
+console.log(__dirname);
+
+const server = http.createServer(async (req, res) =>
 {
     const parsedUrl = url.parse(req.url);
     const method = req.method;
-    const path = parsedUrl.pathname;
+    const parsedUrlPath = parsedUrl.pathname;
 
-    if (path === '/posts' && method === 'GET')
+    console.log(`Received ${method} request for ${parsedUrlPath}`);
+
+    if (parsedUrlPath === '/postsAsTable' && method === 'GET')
+    {
+        getPostsAsTable(req, res);
+    }
+    else if (parsedUrlPath === '/home' && method === 'GET')
+    {
+        var filePathHtml = path.join(__dirname, 'public', 'index.html');
+        var data = await fs.readFile(filePathHtml)
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.write(data);
+        res.end();
+    }
+    else if (parsedUrlPath === '/posts' && method === 'GET')
     {
         getAllPosts(req, res);
     }
-    else if (path.match(/^\/posts\/\d+$/) && method === 'GET')
+    else if (parsedUrlPath.match(/^\/posts\/\d+$/) && method === 'GET')
     {
         req.params = { id: path.split('/')[2] };
         getPostById(req, res);
     }
-    else if (path === '/posts' && method === 'POST')
+    else if (parsedUrlPath === '/posts' && method === 'POST')
     {
         let body = '';
         req.on('data', chunk =>
@@ -30,7 +53,7 @@ const server = http.createServer((req, res) =>
             createPost(req, res);
         });
     }
-    else if (path.match(/^\/posts\/\d+$/) && method === 'PUT')
+    else if (parsedUrlPath.match(/^\/posts\/\d+$/) && method === 'PUT')
     {
         let body = '';
         req.on('data', chunk =>
@@ -43,7 +66,7 @@ const server = http.createServer((req, res) =>
             updatePost(req, res);
         });
     }
-    else if (path.match(/^\/posts\/\d+$/) && method === 'DELETE')
+    else if (parsedUrlPath.match(/^\/posts\/\d+$/) && method === 'DELETE')
     {
         deletePost(req, res);
     }
@@ -52,11 +75,11 @@ const server = http.createServer((req, res) =>
         res.statusCode = 404;
         res.write(JSON.stringify({ message: 'Route not found' }));
     }
-
     res.end();
 });
 
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () =>
 {
     console.log(`Server is running on port ${PORT}`);
